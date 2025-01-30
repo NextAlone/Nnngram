@@ -50,6 +50,7 @@ object Defines {
     @BooleanConfig const val showExactNumber = "showExactNumber"
     @BooleanConfig const val disableTrendingSticker = "disableTrendingSticker"
     @BooleanConfig const val disablePremiumSticker = "disablePremiumSticker"
+    @BooleanConfig const val disableAddStickerFromImage = "disableAddStickerFromImage"
     @BooleanConfig const val disableInstantCamera = "disableInstantCamera"
     @BooleanConfig const val showHiddenSettings = "showHiddenSettings"
     @BooleanConfig const val confirmToSendMediaMessages = "confirmToSendMediaMessages"
