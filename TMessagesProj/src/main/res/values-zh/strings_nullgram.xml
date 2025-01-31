@@ -217,6 +217,7 @@
     <string name="icon_4">图标 4</string>
     <string name="icon_5">图标 5</string>
     <string name="disablePremiumSticker">禁用会员贴纸栏</string>
+    <string name="disableAddStickerFromImage">禁用从图片添加贴纸按钮</string>
     <string name="hideProxySponsorChannel">隐藏代理赞助商频道</string>
     <string name="disablePreviewVideoSoundShortcut">禁用预览视频音量快捷键</string>
     <string name="disablePreviewVideoSoundShortcutNotice">禁用音量键以启用预览视频的声音</string>

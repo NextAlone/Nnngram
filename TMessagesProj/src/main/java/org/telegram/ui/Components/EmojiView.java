@@ -6518,21 +6518,23 @@ public class EmojiView extends FrameLayout implements
                     break;
                 case 7:
                     FrameLayout containerLayout = new FrameLayout(context);
-                    View btnView = new View(context);
-                    Drawable circle = Theme.createRoundRectDrawable(dp(28), Theme.multAlpha(getThemedColor(Theme.key_chat_emojiPanelIcon), .12f));
-                    Drawable drawable = getResources().getDrawable(R.drawable.filled_add_sticker).mutate();
-                    drawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_emojiPanelIcon), PorterDuff.Mode.MULTIPLY));
-                    CombinedDrawable combinedDrawable = new CombinedDrawable(circle, drawable);
-                    combinedDrawable.setCustomSize(dp(56), dp(56));
-                    combinedDrawable.setIconSize(dp(24), dp(24));
-                    btnView.setBackground(combinedDrawable);
-                    btnView.setOnClickListener(v -> {
-                        if (fragment instanceof ChatActivity) {
-                            ((ChatActivity) fragment).openAttachMenuForCreatingSticker();
-                        }
-                    });
-                    ScaleStateListAnimator.apply(btnView);
-                    containerLayout.addView(btnView, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
+                    if(!Config.disableAddStickerFromImage) { // Remove add sticker button
+                        View btnView = new View(context);
+                        Drawable circle = Theme.createRoundRectDrawable(dp(28), Theme.multAlpha(getThemedColor(Theme.key_chat_emojiPanelIcon), .12f));
+                        Drawable drawable = getResources().getDrawable(R.drawable.filled_add_sticker).mutate();
+                        drawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_emojiPanelIcon), PorterDuff.Mode.MULTIPLY));
+                        CombinedDrawable combinedDrawable = new CombinedDrawable(circle, drawable);
+                        combinedDrawable.setCustomSize(dp(56), dp(56));
+                        combinedDrawable.setIconSize(dp(24), dp(24));
+                        btnView.setBackground(combinedDrawable);
+                        btnView.setOnClickListener(v -> {
+                            if (fragment instanceof ChatActivity) {
+                                ((ChatActivity) fragment).openAttachMenuForCreatingSticker();
+                            }
+                        });
+                        ScaleStateListAnimator.apply(btnView);
+                        containerLayout.addView(btnView, LayoutHelper.createFrame(56, 56, Gravity.CENTER));
+                    }
                     view = containerLayout;
                     break;
             }
@@ -6691,7 +6693,9 @@ public class EmojiView extends FrameLayout implements
                     if (!isAddedStickerBtnSet && !StickersAlert.DISABLE_STICKER_EDITOR) {
                         isAddedStickerBtnSet = true;
                         documents = new ArrayList<>(documents);
-                        documents.add(0, new TLRPC.TL_documentEmpty());
+                        if(!Config.disableAddStickerFromImage) { // Adjust item when disabled add sticker button
+                            documents.add(0, new TLRPC.TL_documentEmpty());
+                        }
                     }
                     packStartPosition.put(pack, totalItems);
                 }

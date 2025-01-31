@@ -877,7 +877,8 @@ public class MediaDataController extends BaseController {
         }
         ArrayList<TLRPC.Document> result = new ArrayList<>(arrayList.subList(0, Math.min(arrayList.size(), Config.getMaxRecentSticker())));
         if (firstEmpty && !result.isEmpty() && !StickersAlert.DISABLE_STICKER_EDITOR) {
-            result.add(0, new TLRPC.TL_documentEmpty());
+            if(!Config.disableAddStickerFromImage) // Adjust the position of items when add sticker button is removed (So why don't do it in view but in controller)
+                result.add(0, new TLRPC.TL_documentEmpty());
         }
         return result;
     }
