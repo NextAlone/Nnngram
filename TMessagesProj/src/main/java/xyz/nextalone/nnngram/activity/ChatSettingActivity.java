@@ -103,6 +103,7 @@ public class ChatSettingActivity extends BaseActivity {
     private int ignoreBlockedUserMessagesRow;
     private int hideGroupStickerRow;
     private int disablePremiumStickerRow;
+    private int disableAddStickerFromImage;
     private int messageMenuRow;
     private int textStyleSettingsRow;
     private int allowScreenshotOnNoForwardChatRow;
@@ -222,6 +223,11 @@ public class ChatSettingActivity extends BaseActivity {
             Config.toggleDisablePremiumSticker();
             if (view instanceof TextCheckCell) {
                 ((TextCheckCell) view).setChecked(Config.disablePremiumSticker);
+            }
+        } else if(position == disableAddStickerFromImage) {
+            Config.toggleDisableAddStickerFromImage();
+            if (view instanceof TextCheckCell) {
+                ((TextCheckCell) view).setChecked(Config.disableAddStickerFromImage);
             }
         } else if (position == messageMenuRow) {
             showMessageMenuAlert();
@@ -511,6 +517,7 @@ public class ChatSettingActivity extends BaseActivity {
         ignoreBlockedUserMessagesRow = addRow("ignoreBlockedUserMessages");
         hideGroupStickerRow = addRow("hideGroupSticker");
         disablePremiumStickerRow = addRow("disablePremiumSticker");
+        disableAddStickerFromImage = addRow("disableAddStickerFromImage");
         messageMenuRow = addRow();
         textStyleSettingsRow = addRow("textStyleSettings");
         if (Config.showHiddenSettings) {
@@ -659,6 +666,8 @@ public class ChatSettingActivity extends BaseActivity {
                         textCell.setTextAndCheck(LocaleController.getString("hideGroupSticker", R.string.hideGroupSticker), Config.hideGroupSticker, true);
                     } else if (position == disablePremiumStickerRow) {
                         textCell.setTextAndCheck(LocaleController.getString("disablePremiumSticker", R.string.disablePremiumSticker), Config.disablePremiumSticker, true);
+                    } else if (position == disableAddStickerFromImage) {
+                        textCell.setTextAndCheck(LocaleController.getString("disableAddStickerFromImage", R.string.disableAddStickerFromImage), Config.disableAddStickerFromImage, true);
                     } else if (position == allowScreenshotOnNoForwardChatRow) {
                         textCell.setTextAndValueAndCheck(LocaleController.getString("allowScreenshotOnNoForwardChat", R.string.allowScreenshotOnNoForwardChat), LocaleController.getString("allowScreenshotOnNoForwardChatWarning", R.string.allowScreenshotOnNoForwardChatWarning), Config.allowScreenshotOnNoForwardChat, true, true);
                     } else if (position == labelChannelUserRow) {
