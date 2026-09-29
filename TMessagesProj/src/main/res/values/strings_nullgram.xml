@@ -502,4 +502,6 @@
     <string name="SegText">Text</string>
     <string name="SegIcon">Icon</string>
     <string name="CustomQuickMessage">Custom quick message</string>
+    <string name="ResetSettings">Reset Settings</string>
+    <string name="ResetSettingsAlert">Are you sure you want to reset all Nnngram settings?</string>
 </resources>
