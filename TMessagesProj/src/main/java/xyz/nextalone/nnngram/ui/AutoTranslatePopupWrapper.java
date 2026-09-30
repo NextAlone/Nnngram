@@ -48,14 +48,20 @@ public class AutoTranslatePopupWrapper {
     private final ActionBarMenuSubItem defaultItem;
     private final ActionBarMenuSubItem enableItem;
     private final ActionBarMenuSubItem disableItem;
+    private final Runnable onConfigChanged;
     private final boolean supportLanguageDetector = LanguageDetector.hasSupport();
 
     public AutoTranslatePopupWrapper(BaseFragment fragment, PopupSwipeBackLayout swipeBackLayout, long dialogId, long topicId, Theme.ResourcesProvider resourcesProvider) {
+        this(fragment, swipeBackLayout, dialogId, topicId, resourcesProvider, null);
+    }
+
+    public AutoTranslatePopupWrapper(BaseFragment fragment, PopupSwipeBackLayout swipeBackLayout, long dialogId, long topicId, Theme.ResourcesProvider resourcesProvider, Runnable onConfigChanged) {
         Context context = fragment.getParentActivity();
         windowLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(context, 0, resourcesProvider);
         windowLayout.setFitItems(true);
         this.dialogId = dialogId;
         this.topicId = topicId;
+        this.onConfigChanged = onConfigChanged;
 
         if (swipeBackLayout != null) {
             var backItem = ActionBarMenuItem.addItem(windowLayout, R.drawable.msg_arrow_back, LocaleController.getString("Back", R.string.Back), false, resourcesProvider);
@@ -70,7 +76,7 @@ public class AutoTranslatePopupWrapper {
                 return;
             }
             DialogConfig.removeAutoTranslateConfig(dialogId, topicId);
-            updateItems();
+            onConfigChanged();
         });
         defaultItem.setAlpha(supportLanguageDetector ? 1.0f : 0.5f);
 
@@ -82,7 +88,7 @@ public class AutoTranslatePopupWrapper {
                 return;
             }
             DialogConfig.setAutoTranslateEnable(dialogId, topicId, true);
-            updateItems();
+            onConfigChanged();
         });
         enableItem.setAlpha(supportLanguageDetector ? 1.0f : 0.5f);
 
@@ -94,7 +100,7 @@ public class AutoTranslatePopupWrapper {
                 return;
             }
             DialogConfig.setAutoTranslateEnable(dialogId, topicId, false);
-            updateItems();
+            onConfigChanged();
         });
         disableItem.setAlpha(supportLanguageDetector ? 1.0f : 0.5f);
         updateItems();
@@ -121,5 +127,11 @@ public class AutoTranslatePopupWrapper {
         enableItem.setChecked(DialogConfig.hasAutoTranslateConfig(dialogId, topicId) && DialogConfig.isAutoTranslateEnable(dialogId, topicId));
         disableItem.setChecked(DialogConfig.hasAutoTranslateConfig(dialogId, topicId) && !DialogConfig.isAutoTranslateEnable(dialogId, topicId));
     }
-}
 
+    private void onConfigChanged() {
+        updateItems();
+        if (onConfigChanged != null) {
+            onConfigChanged.run();
+        }
+    }
+}

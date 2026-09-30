@@ -37,6 +37,12 @@ import org.telegram.messenger.R
 import org.telegram.tgnet.TLRPC
 import xyz.nextalone.nnngram.helpers.TranslateHelper
 import xyz.nextalone.nnngram.utils.Log
+import java.util.ArrayList
+
+data class FormattedText(
+    val text: String,
+    val entities: ArrayList<TLRPC.MessageEntity>
+)
 
 abstract class BaseTranslator {
     /**
@@ -137,51 +143,54 @@ abstract class BaseTranslator {
     /**
      * translate
      *
-     * @param source one of them: [String] or [TLRPC.TL_poll]
+     * @param source one of them: [CharSequence] or [TLRPC.TL_poll]
      * @param from source language
      * @param to target language
      *
      * @return [TranslateResult]
      */
     open suspend fun translate(source: Any, from: String, to: String): TranslateResult {
-        val cachedResult: TranslateResult? = cache.get(Pair(source, to))
+        // Translation dialogs accept CharSequence and may pass a SpannableStringBuilder here.
+        // Providers translate plain text, so normalize every CharSequence before dispatch/cache.
+        val normalizedSource = if (source is CharSequence) source.toString() else source
+        val cachedResult: TranslateResult? = cache.get(Pair(normalizedSource, to))
         if (cachedResult != null) {
             return cachedResult
         }
 
         val from = convertLanguageCode(if (TextUtils.isEmpty(from) || "und" == from) "auto" else from, false)
         val to = convertLanguageCode(to, false)
-        when (source) {
+        when (normalizedSource) {
             is String -> {
-                val result = doTranslateText(source, from, to)
+                val result = doTranslateText(normalizedSource, from, to)
                 return if (result.error == null) {
-                    val translateResult = TranslateResult(from, result.result)
-                    cache.put(Pair(source, to), translateResult)
+                    val translateResult = TranslateResult(result.from, result.result)
+                    cache.put(Pair(normalizedSource, to), translateResult)
                     translateResult
                 } else {
-                    TranslateResult(from, null, result.error)
+                    TranslateResult(result.from, null, result.error)
                 }
             }
 
             is TLRPC.Poll -> {
                 val translatedPoll: TLRPC.TL_poll = TLRPC.TL_poll().apply {
                     // Keep original information
-                    close_date = source.close_date
-                    close_period = source.close_period
-                    closed = source.closed
-                    flags = source.flags
-                    id = source.id
-                    multiple_choice = source.multiple_choice
-                    public_voters = source.public_voters
-                    quiz = source.quiz
+                    close_date = normalizedSource.close_date
+                    close_period = normalizedSource.close_period
+                    closed = normalizedSource.closed
+                    flags = normalizedSource.flags
+                    id = normalizedSource.id
+                    multiple_choice = normalizedSource.multiple_choice
+                    public_voters = normalizedSource.public_voters
+                    quiz = normalizedSource.quiz
                 }
 
                 // Translate question
-                val translatedQuestion = doTranslateText(source.question.text, from, to)
+                val translatedQuestion = doTranslateText(normalizedSource.question.text, from, to)
                 val question = if (translatedQuestion.error == null) {
                     if (TranslateHelper.showOriginal) {
                         """
-                        |${source.question.text}
+                        |${normalizedSource.question.text}
                         |
                         |--------
                         |
@@ -197,7 +206,7 @@ abstract class BaseTranslator {
                     text = question
                 }
                 // Translate options
-                source.answers.forEach {
+                normalizedSource.answers.forEach {
                     val translatedAnswer = doTranslateText(it.text.text, from, to)
                     val translatedPollAnswer = TLRPC.TL_pollAnswer()
                     val text = if (translatedAnswer.error == null) {
@@ -216,7 +225,7 @@ abstract class BaseTranslator {
                     translatedPoll.answers.add(translatedPollAnswer)
                 }
                 val result = TranslateResult(from, translatedPoll)
-                cache.put(Pair(source, to), result)
+                cache.put(Pair(normalizedSource, to), result)
                 return result
             }
 

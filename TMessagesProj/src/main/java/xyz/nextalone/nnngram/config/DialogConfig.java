@@ -29,20 +29,86 @@ import xyz.nextalone.nnngram.helpers.TranslateHelper;
 public class DialogConfig {
     private static final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("dialogconfig", Context.MODE_PRIVATE);
 
-    public static boolean isAutoTranslateEnable(long dialog_id, long topicId) {
-        return preferences.getBoolean("autoTranslate_" + dialog_id + (topicId != 0 ? "_" + topicId : ""), TranslateHelper.getAutoTranslate());
+    public static boolean isAutoTranslateEnable(long dialogId, long topicId) {
+        migrateLegacyPositiveChatKey(dialogId, topicId);
+        String exactKey = AutoTranslateConfigKey.forDialog(dialogId, topicId);
+        boolean hasExactValue = preferences.contains(exactKey);
+        boolean exactValue = preferences.getBoolean(exactKey, false);
+
+        String parentDialogKey = AutoTranslateConfigKey.parentDialogKey(dialogId, topicId);
+        boolean hasParentDialogValue = false;
+        boolean parentDialogValue = false;
+        if (parentDialogKey != null) {
+            migrateLegacyPositiveChatKey(dialogId, 0);
+            hasParentDialogValue = preferences.contains(parentDialogKey);
+            parentDialogValue = preferences.getBoolean(parentDialogKey, false);
+        }
+
+        return AutoTranslateConfigKey.resolveEffectiveValue(
+                hasExactValue,
+                exactValue,
+                hasParentDialogValue,
+                parentDialogValue,
+                TranslateHelper.getAutoTranslate()
+        );
     }
 
-    public static boolean hasAutoTranslateConfig(long dialog_id, long topicId) {
-        return preferences.contains("autoTranslate_" + dialog_id + (topicId != 0 ? "_" + topicId : ""));
+    public static boolean hasAutoTranslateConfig(long dialogId, long topicId) {
+        migrateLegacyPositiveChatKey(dialogId, topicId);
+        return preferences.contains(AutoTranslateConfigKey.forDialog(dialogId, topicId));
     }
 
-    public static void setAutoTranslateEnable(long dialog_id, long topicId, boolean enable) {
-        preferences.edit().putBoolean("autoTranslate_" + dialog_id + (topicId != 0 ? "_" + topicId : ""), enable).apply();
+    public static void setAutoTranslateEnable(long dialogId, long topicId, boolean enable) {
+        SharedPreferences.Editor editor = preferences.edit()
+                .putBoolean(AutoTranslateConfigKey.forDialog(dialogId, topicId), enable);
+        markSignedDialogMigrated(editor, dialogId, topicId);
+        editor.apply();
     }
 
-    public static void removeAutoTranslateConfig(long dialog_id, long topicId) {
-        preferences.edit().remove("autoTranslate_" + dialog_id + (topicId != 0 ? "_" + topicId : "")).apply();
+    public static void removeAutoTranslateConfig(long dialogId, long topicId) {
+        SharedPreferences.Editor editor = preferences.edit()
+                .remove(AutoTranslateConfigKey.forDialog(dialogId, topicId));
+        markSignedDialogMigrated(editor, dialogId, topicId);
+        editor.apply();
+    }
+
+    /**
+     * Older builds read and wrote chat overrides under a positive raw chat ID,
+     * while the in-chat menu wrote a signed key that was never read. Copy the
+     * legacy value once, replacing any signed value, so the effective setting
+     * survives the upgrade. The legacy key is intentionally retained because it
+     * may also represent a private dialog with the same raw ID.
+     */
+    private static synchronized void migrateLegacyPositiveChatKey(long dialogId, long topicId) {
+        if (dialogId >= 0) {
+            return;
+        }
+
+        String canonicalKey = AutoTranslateConfigKey.forDialog(dialogId, topicId);
+        String markerKey = AutoTranslateConfigKey.signedDialogMigrationMarker(dialogId, topicId);
+        String legacyKey = AutoTranslateConfigKey.legacyPositiveChatKey(dialogId, topicId);
+        boolean hasMigrationMarker = preferences.getBoolean(markerKey, false);
+        boolean hasLegacyValue = legacyKey != null && preferences.contains(legacyKey);
+
+        if (hasMigrationMarker) {
+            return;
+        }
+
+        SharedPreferences.Editor editor = preferences.edit().putBoolean(markerKey, true);
+        if (AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(
+                dialogId,
+                hasMigrationMarker,
+                hasLegacyValue
+        )) {
+            editor.putBoolean(canonicalKey, preferences.getBoolean(legacyKey, TranslateHelper.getAutoTranslate()));
+        }
+        editor.apply();
+    }
+
+    private static void markSignedDialogMigrated(SharedPreferences.Editor editor, long dialogId, long topicId) {
+        if (dialogId < 0) {
+            editor.putBoolean(AutoTranslateConfigKey.signedDialogMigrationMarker(dialogId, topicId), true);
+        }
     }
 
 }

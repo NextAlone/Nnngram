@@ -87,6 +87,7 @@ import org.telegram.ui.ChatActivity
 import org.telegram.ui.Components.AlertsCreator
 import org.telegram.ui.Components.AvatarDrawable
 import org.telegram.ui.Components.BackupImageView
+import xyz.nextalone.nnngram.translate.RichMessageTextProcessor
 import org.telegram.ui.Components.Bulletin
 import org.telegram.ui.Components.Bulletin.ButtonLayout
 import org.telegram.ui.Components.Bulletin.LottieLayout
@@ -98,6 +99,7 @@ import org.telegram.ui.Components.LayoutHelper
 import org.telegram.ui.Components.TranscribeButton
 import xyz.nextalone.nnngram.helpers.QrHelper
 import xyz.nextalone.nnngram.helpers.QrHelper.readQr
+import xyz.nextalone.nnngram.helpers.TranslateHelper
 import xyz.nextalone.nnngram.tryOrLog
 import java.io.File
 import java.io.FileInputStream
@@ -557,6 +559,8 @@ class MessageUtils(num: Int) : BaseController(num) {
         }
         return if (messageObject.isPoll) {
             true
+        } else if (isDeepLxRichMessage(messageObject)) {
+            RichMessageTextProcessor.hasTranslatableText(messageObject.messageOwner.rich_message)
         } else !TextUtils.isEmpty(messageObject.messageOwner.message) && !isLinkOrEmojiOnlyMessage(messageObject)
     }
 
@@ -583,6 +587,8 @@ class MessageUtils(num: Int) : BaseController(num) {
                 pollText.append(answer.text)
             }
             pollText.toString()
+        } else if (isDeepLxRichMessage(messageObject)) {
+            RichMessageTextProcessor.plainText(messageObject.messageOwner.rich_message)
         } else if (messageObject.isVoiceTranscriptionOpen) {
             messageObject.messageOwner.voiceTranscription
         } else {
@@ -597,6 +603,8 @@ class MessageUtils(num: Int) : BaseController(num) {
         } else if (selectedObject.isPoll) {
             selectedObject
         } else if (selectedObject.isVoiceTranscriptionOpen && !TextUtils.isEmpty(selectedObject.messageOwner.voiceTranscription) && !TranscribeButton.isTranscribing(selectedObject)) {
+            selectedObject
+        } else if (isDeepLxRichMessage(selectedObject) && RichMessageTextProcessor.hasTranslatableText(selectedObject.messageOwner.rich_message)) {
             selectedObject
         } else if (!selectedObject.isVoiceTranscriptionOpen && !TextUtils.isEmpty(selectedObject.messageOwner.message) && !isLinkOrEmojiOnlyMessage(selectedObject)) {
             selectedObject
@@ -622,11 +630,21 @@ class MessageUtils(num: Int) : BaseController(num) {
         obj.translating = translating
         obj.translatedLanguage = translatedLanguage
         obj.translated = translated
+        if (isDeepLxTranslator() && obj.type == MessageObject.TYPE_ARTICLE) {
+            obj.richLayout = null
+            obj.generateLayout(null)
+        }
         if (messageObject.isSponsored) {
             obj.sponsoredId = messageObject.sponsoredId
         }
         replaceMessagesObject(dialogId, obj)
     }
+
+    private fun isDeepLxTranslator(): Boolean =
+        TranslateHelper.currentProviderType == TranslateHelper.ProviderType.DeepLxTranslator
+
+    fun isDeepLxRichMessage(messageObject: MessageObject?): Boolean =
+        messageObject?.messageOwner?.rich_message != null && isDeepLxTranslator()
 
     private fun replaceMessagesObject(dialogId: Long, messageObject: MessageObject) {
         val arrayList = ArrayList<MessageObject>()

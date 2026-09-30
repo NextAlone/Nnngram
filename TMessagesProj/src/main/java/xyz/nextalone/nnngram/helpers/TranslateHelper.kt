@@ -30,6 +30,7 @@ import android.view.View
 import androidx.core.text.HtmlCompat
 import androidx.core.util.Pair
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -194,10 +195,7 @@ object TranslateHelper {
 
     @JvmStatic
     fun stripLanguageCode(language: String): String {
-
-        return if (language.contains("-")) {
-            language.substring(0, language.indexOf("-"))
-        } else language
+        return language.substringBefore('-').substringBefore('_')
     }
 
     @JvmStatic
@@ -208,8 +206,15 @@ object TranslateHelper {
             onError(UnsupportedTargetLanguageException())
         } else {
             CoroutineScope(Dispatchers.Main).launch {
-                val result = withContext(Dispatchers.IO) {
-                    translator.translate(obj, from, to)
+                val result = try {
+                    withContext(Dispatchers.IO) {
+                        translator.translate(obj, from, to)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    onError(e)
+                    return@launch
                 }
                 if (result.error != null) {
                     if (result.error == HttpStatusCode.TooManyRequests) {
@@ -231,22 +236,14 @@ object TranslateHelper {
         if (lang == null || lang == "und") {
             return false
         }
-        val toLang: String = stripLanguageCode(getCurrentProvider().getCurrentTargetLanguage())
-        lang = stripLanguageCode(lang)
+        val toLang: String = stripLanguageCode(getCurrentProvider().getCurrentTargetLanguage()).lowercase(Locale.ROOT)
+        lang = stripLanguageCode(lang).lowercase(Locale.ROOT)
         if (lang == toLang) {
             return true
         }
-        var restricted = false
-        restrictedLanguages.forEach {
-            val language = if (it.contains("-")) {
-                it.substring(0, it.indexOf("_"))
-            } else it
-            if (lang == language) {
-                restricted = true
-                return@forEach
-            }
+        return restrictedLanguages.any {
+            lang == stripLanguageCode(it).lowercase(Locale.ROOT)
         }
-        return restricted
     }
 
     @JvmStatic

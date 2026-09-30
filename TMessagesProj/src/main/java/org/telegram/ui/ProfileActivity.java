@@ -12696,12 +12696,12 @@ if (myProfile && bottomButton != null) {
             }
             if (ChatObject.isChannel(chat)) {
                 if (isTopic) {
-                    createAutoTranslateItem(chat.id, topicId);
+                    createAutoTranslateItem(getDialogId(), topicId);
                     if (ChatObject.canManageTopic(currentAccount, chat, topicId)) {
                         editItemVisible = true;
                     }
                 } else {
-                    createAutoTranslateItem(chat.id);
+                    createAutoTranslateItem(getDialogId());
                     if ((ChatObject.hasAdminRights(chat) || chat.megagroup && ChatObject.canChangeChatInfo(chat)) || chat.megagroup) {
                         editItemVisible = true;
                     }
