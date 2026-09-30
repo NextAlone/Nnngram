@@ -28,16 +28,14 @@ public final class AutoTranslateConfigKeyTest {
         assertFalse("missing topic and group use disabled global value",
                 AutoTranslateConfigKey.resolveEffectiveValue(false, true, false, true, false));
 
-        assertTrue("migrate untouched legacy group value",
-                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, false, false, true));
-        assertFalse("canonical signed value takes precedence",
-                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, true, false, true));
+        assertTrue("migrate legacy group value, replacing a never-read signed value",
+                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, false, true));
         assertFalse("migration marker prevents restoring a removed override",
-                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, false, true, true));
+                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, true, true));
         assertFalse("private dialog value is never treated as legacy chat data",
-                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(42, false, false, true));
+                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(42, false, true));
         assertFalse("missing legacy value does not create an override",
-                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, false, false, false));
+                AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(-42, false, false));
     }
 
     private static void assertEquals(String label, String expected, String actual) {

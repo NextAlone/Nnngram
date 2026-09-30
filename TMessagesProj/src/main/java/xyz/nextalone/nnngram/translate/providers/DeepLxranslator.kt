@@ -144,7 +144,7 @@ object DeepLxTranslator : BaseTranslator() {
             if (result.from.isNotBlank() && !result.from.equals("auto", ignoreCase = true)) {
                 detectedLanguage = result.from
             }
-            translated.append(result.result)
+            translated.append(DeepLxTextProcessor.restoreEdgeWhitespace(part.text, result.result))
         }
         return RequestResult(detectedLanguage, translated.toString())
     }

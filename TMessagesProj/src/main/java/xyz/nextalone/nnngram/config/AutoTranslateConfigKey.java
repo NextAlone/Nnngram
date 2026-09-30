@@ -53,11 +53,10 @@ final class AutoTranslateConfigKey {
 
     static boolean shouldMigrateLegacyPositiveChatKey(
             long dialogId,
-            boolean hasCanonicalValue,
             boolean hasMigrationMarker,
             boolean hasLegacyValue
     ) {
-        return dialogId < 0 && !hasCanonicalValue && !hasMigrationMarker && hasLegacyValue;
+        return dialogId < 0 && !hasMigrationMarker && hasLegacyValue;
     }
 
     private static String topicSuffix(long topicId) {

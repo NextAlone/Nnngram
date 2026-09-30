@@ -73,10 +73,11 @@ public class DialogConfig {
     }
 
     /**
-     * Older profile menus stored chat overrides under a positive raw chat ID.
-     * Copy that value once when no canonical signed value exists. The legacy
-     * key is intentionally retained because it may also represent a private
-     * dialog with the same raw ID.
+     * Older builds read and wrote chat overrides under a positive raw chat ID,
+     * while the in-chat menu wrote a signed key that was never read. Copy the
+     * legacy value once, replacing any signed value, so the effective setting
+     * survives the upgrade. The legacy key is intentionally retained because it
+     * may also represent a private dialog with the same raw ID.
      */
     private static synchronized void migrateLegacyPositiveChatKey(long dialogId, long topicId) {
         if (dialogId >= 0) {
@@ -86,7 +87,6 @@ public class DialogConfig {
         String canonicalKey = AutoTranslateConfigKey.forDialog(dialogId, topicId);
         String markerKey = AutoTranslateConfigKey.signedDialogMigrationMarker(dialogId, topicId);
         String legacyKey = AutoTranslateConfigKey.legacyPositiveChatKey(dialogId, topicId);
-        boolean hasCanonicalValue = preferences.contains(canonicalKey);
         boolean hasMigrationMarker = preferences.getBoolean(markerKey, false);
         boolean hasLegacyValue = legacyKey != null && preferences.contains(legacyKey);
 
@@ -97,7 +97,6 @@ public class DialogConfig {
         SharedPreferences.Editor editor = preferences.edit().putBoolean(markerKey, true);
         if (AutoTranslateConfigKey.shouldMigrateLegacyPositiveChatKey(
                 dialogId,
-                hasCanonicalValue,
                 hasMigrationMarker,
                 hasLegacyValue
         )) {

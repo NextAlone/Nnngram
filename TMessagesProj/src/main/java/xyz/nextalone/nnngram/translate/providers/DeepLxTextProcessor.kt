@@ -156,6 +156,16 @@ internal object DeepLxTextProcessor {
         return result
     }
 
+    /**
+     * DeepL trims each request, so whitespace at chunk edges would vanish when chunks are joined.
+     * Re-applies the source chunk's leading and trailing whitespace around the translation.
+     */
+    fun restoreEdgeWhitespace(source: String, translated: String): String {
+        val leading = source.takeWhile { it.isWhitespace() }
+        val trailing = source.takeLastWhile { it.isWhitespace() }
+        return leading + translated.trim() + trailing
+    }
+
     private fun splitStructuralWhitespace(text: String): List<Part> {
         val result = ArrayList<Part>()
         var textStart = 0
