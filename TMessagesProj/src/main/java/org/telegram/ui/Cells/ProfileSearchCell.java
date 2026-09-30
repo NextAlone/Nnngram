@@ -83,7 +83,6 @@ import org.telegram.ui.community.CommunityUtils;
 
 import java.util.Locale;
 
-import xyz.nextalone.gen.Config;
 import xyz.nextalone.nnngram.utils.StringUtils;
 
 public class ProfileSearchCell extends BaseCell implements NotificationCenter.NotificationCenterDelegate, Theme.Colorable {
@@ -1011,7 +1010,7 @@ public class ProfileSearchCell extends BaseCell implements NotificationCenter.No
             statusDrawable.draw(canvas);
         }
 
-        if (Config.blockSponsorAds && ad != null && adText != null && adBackgroundPaint != null) {
+        if (ad != null && adText != null && adBackgroundPaint != null) {
             final int color = Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider);
             adBackgroundPaint.setColor(Theme.multAlpha(color, .10f));
             final int w = (int) adText.getWidth() + dp(12.66f);
