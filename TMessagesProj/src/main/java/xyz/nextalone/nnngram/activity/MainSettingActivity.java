@@ -89,6 +89,7 @@ public class MainSettingActivity extends BaseActivity {
 
     private static final int backup_settings = 1;
     private static final int import_settings = 2;
+    private static final int reset_settings = 3;
 
     @Override
     protected BaseListAdapter createAdapter(Context context) {
@@ -165,6 +166,7 @@ public class MainSettingActivity extends BaseActivity {
         ActionBarMenuItem otherMenu = menu.addItem(0, R.drawable.ic_ab_other);
         otherMenu.addSubItem(backup_settings, LocaleController.getString("BackupSettings", R.string.BackupSettings));
         otherMenu.addSubItem(import_settings, LocaleController.getString("ImportSettings", R.string.ImportSettings));
+        otherMenu.addSubItem(reset_settings, LocaleController.getString("ResetSettings", R.string.ResetSettings));
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -199,6 +201,8 @@ public class MainSettingActivity extends BaseActivity {
                         }
                     });
                     presentFragment(fragment);
+                } else if (id == reset_settings) {
+                    resetSettings();
                 }
             }
         });
@@ -363,5 +367,14 @@ public class MainSettingActivity extends BaseActivity {
             AlertUtil.showSimpleAlert(context, e);
         }
 
+    }
+
+    @SuppressLint("ApplySharedPref")
+    private void resetSettings() {
+        Context context = getParentActivity();
+        AlertUtil.showConfirm(context, LocaleController.getString("ResetSettingsAlert", R.string.ResetSettingsAlert), R.drawable.msg_reset, LocaleController.getString("Reset", R.string.Reset), true, () -> {
+            ApplicationLoader.applicationContext.getSharedPreferences("globalConfig", Context.MODE_PRIVATE).edit().clear().commit();
+            ProcessPhoenix.triggerRebirth(context, new Intent(context, LaunchActivity.class));
+        });
     }
 }

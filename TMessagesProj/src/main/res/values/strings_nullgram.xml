@@ -519,4 +519,6 @@
     <string name="SegText">Text</string>
     <string name="SegIcon">Icon</string>
     <string name="CustomQuickMessage">Custom quick message</string>
+    <string name="ResetSettings">Reset Settings</string>
+    <string name="ResetSettingsAlert">Reset everything under Nnngram Settings to defaults? This also clears the custom API, translation API tokens, message filters, channel aliases, custom quick messages and other data saved there. The passcode and the settings and themes of Telegram itself are not affected. The app will restart.</string>
 </resources>

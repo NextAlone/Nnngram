@@ -526,4 +526,6 @@
     <string name="SegText">文字</string>
     <string name="SegIcon">圖示</string>
     <string name="CustomQuickMessage">自訂快速訊息</string>
+    <string name="ResetSettings">重設設定</string>
+    <string name="ResetSettingsAlert">您確定要將 Nnngram 設定中的全部內容還原為預設值嗎？自訂 API、翻譯 API 權杖、訊息過濾規則、頻道別名、自訂快速訊息等儲存在其中的資料也會一併清除。密碼鎖以及 Telegram 本身的設定和主題不受影響。應用程式將會重新啟動。</string>
 </resources>
