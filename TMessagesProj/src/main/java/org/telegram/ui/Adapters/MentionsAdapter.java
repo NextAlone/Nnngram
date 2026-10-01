@@ -214,6 +214,8 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
         }
     };
 
+    private final NotificationCenter.ObserversGroup observersGroup;
+
     public MentionsAdapter(Context context, boolean darkTheme, long did, long threadMessageId, MentionsAdapterDelegate mentionsAdapterDelegate, Theme.ResourcesProvider resourcesProvider, boolean stories) {
         this.resourcesProvider = resourcesProvider;
         mContext = context;
@@ -236,12 +238,17 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
                 }
             }
         });
+
+        observersGroup = NotificationCenter.getInstance(currentAccount)
+            .createWeakObserversGroup(this)
+            .add(NotificationCenter.recentDocumentsDidLoad)
+            .add(NotificationCenter.stickersDidLoad);
+
         if (!darkTheme) {
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoaded);
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileLoadFailed);
+            observersGroup
+                .add(NotificationCenter.fileLoaded)
+                .add(NotificationCenter.fileLoadFailed);
         }
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.recentDocumentsDidLoad);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.stickersDidLoad);
     }
 
     public TLRPC.User getFoundContextBot() {
@@ -521,12 +528,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
         searchingContextUsername = null;
         searchingContextQuery = null;
         noUserName = false;
-        if (!isDarkTheme) {
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoaded);
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileLoadFailed);
-        }
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.recentDocumentsDidLoad);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.stickersDidLoad);
+        observersGroup.removeAllObservers();
     }
 
     public void setParentFragment(ChatActivity fragment) {

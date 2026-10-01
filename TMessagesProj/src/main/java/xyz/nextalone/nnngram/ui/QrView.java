@@ -47,7 +47,7 @@ public class QrView extends View {
         crossfadeToPaint.setShader(new LinearGradient(0, 0, 0, AndroidUtilities.dp(crossfadeWidthDp), new int[]{0, 0xffffffff}, new float[]{0f, 1f}, Shader.TileMode.CLAMP));
         crossfadeToPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
 
-        loadingMatrix = new RLottieDrawable(R.raw.qr_matrix, "qr_matrix", AndroidUtilities.dp(200), AndroidUtilities.dp(200));
+        loadingMatrix = new RLottieDrawable(R.raw.qr_matrix, AndroidUtilities.dp(200), AndroidUtilities.dp(200));
         loadingMatrix.setMasterParent(this);
         loadingMatrix.setAutoRepeat(1);
         loadingMatrix.setColorFilter(Color.BLACK, PorterDuff.Mode.MULTIPLY);

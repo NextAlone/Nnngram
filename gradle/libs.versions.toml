@@ -1,5 +1,5 @@
 [versions]
-agp = "8.12.0"
+agp = "8.13.2"
 aboutlibraries = "12.2.4"
 biometric = "1.1.0"
 checkerCompatQual = "2.5.6"
@@ -36,6 +36,7 @@ poet = "2.2.0"
 mlkitVision = "16.0.0-beta1"
 processPhoenix = "3.0.0"
 sharetarget = "1.2.0"
+webkit = "1.14.0"
 paletteKtx = "1.0.0"
 rust = "0.9.6"
 carApp = "1.4.0"
@@ -83,6 +84,7 @@ sharetarget = { module = "androidx.sharetarget:sharetarget", version.ref = "shar
 fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 interpolator = { module = "androidx.interpolator:interpolator", version.ref = "interpolator" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
+webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = "paletteKtx" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }

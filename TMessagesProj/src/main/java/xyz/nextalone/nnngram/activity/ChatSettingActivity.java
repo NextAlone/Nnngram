@@ -738,7 +738,7 @@ public class ChatSettingActivity extends BaseActivity {
                         if (Config.channelAlias) {
                             textCell.setEnabled(false, null);
                         }
-                        textCell.setTextAndValueAndCheck(LocaleController.getString("labelChannelUser", R.string.labelChannelUser), LocaleController.getString("labelChannelUser", R.string.labelChannelUserDetails), Config.labelChannelUser, true, true);
+                        textCell.setTextAndValueAndCheck(LocaleController.getString("labelChannelUser", R.string.labelChannelUser), LocaleController.getString(R.string.labelChannelUserDetails), Config.labelChannelUser, true, true);
                     } else if (position == displaySpoilerDirectlyRow) {
                         textCell.setTextAndCheck(LocaleController.getString("displaySpoilerDirectly", R.string.displaySpoilerDirectly), Config.displaySpoilerMsgDirectly, true);
                     } else if (position == disableJumpToNextChannelRow) {

@@ -56,6 +56,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.URLSpanNoUnderline;
+import org.telegram.utils.proxy.ProxySettings;
 
 import java.util.Locale;
 
@@ -176,7 +177,8 @@ public class DatacenterActivity extends BaseActivity implements NotificationCent
         if (force) {
             listAdapter.notifyItemChanged(position);
         }
-        datacenterInfo.pingId = ConnectionsManager.getInstance(currentAccount).checkProxy("ping-test", datacenterInfo.id, null, null, null, time -> AndroidUtilities.runOnUIThread(() -> {
+        ProxySettings pingSettings = ProxySettings.builder().setAddress("ping-test").setPort(datacenterInfo.id).build();
+        datacenterInfo.pingId = ConnectionsManager.getInstance(currentAccount).checkProxy(pingSettings, time -> AndroidUtilities.runOnUIThread(() -> {
             datacenterInfo.availableCheckTime = SystemClock.elapsedRealtime();
             datacenterInfo.checking = false;
             if (time == -1) {

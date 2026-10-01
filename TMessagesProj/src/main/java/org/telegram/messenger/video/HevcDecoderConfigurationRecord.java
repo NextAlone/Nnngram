@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import com.coremedia.iso.IsoTypeReader;
 import com.coremedia.iso.IsoTypeWriter;
 import com.coremedia.iso.boxes.sampleentry.VisualSampleEntry;
+
 import com.googlecode.mp4parser.authoring.tracks.CleanInputStream;
 import com.googlecode.mp4parser.util.ByteBufferByteChannel;
 

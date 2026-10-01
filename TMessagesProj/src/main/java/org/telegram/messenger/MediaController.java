@@ -73,14 +73,17 @@ import android.webkit.MimeTypeMap;
 import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.exifinterface.media.ExifInterface;
 
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.extractor.jpeg.MotionPhotoDescription;
-import com.google.android.exoplayer2.extractor.jpeg.XmpMotionPhotoDescriptionParser;
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import androidx.media3.common.C;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.common.Player;
+import androidx.media3.extractor.jpeg.MotionPhotoDescription;
+import androidx.media3.extractor.jpeg.XmpMotionPhotoDescriptionParser;
+
+import org.telegram.ui.AspectRatioFrameLayout;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.common.images.WebImage;
 

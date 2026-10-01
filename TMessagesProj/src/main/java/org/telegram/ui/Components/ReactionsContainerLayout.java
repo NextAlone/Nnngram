@@ -2108,7 +2108,7 @@ public class ReactionsContainerLayout extends FrameLayout implements Notificatio
 
         private void updateImage(ReactionsLayoutInBubble.VisibleReaction react) {
             if (react != null && react.isStar) {
-                enterImageView.getImageReceiver().setImageBitmap(new RLottieDrawable(R.raw.star_reaction, "star_reaction", dp(30), dp(30)));
+                enterImageView.getImageReceiver().setImageBitmap(new RLottieDrawable(R.raw.star_reaction, dp(30), dp(30)));
                 loopImageView.getImageReceiver().setImageBitmap(getContext().getResources().getDrawable(R.drawable.star_reaction));
                 if (particles == null) {
                     particles = new StarsReactionsSheet.Particles(StarsReactionsSheet.Particles.TYPE_RADIAL, SharedConfig.getDevicePerformanceClass() == SharedConfig.PERFORMANCE_CLASS_HIGH ? 45 : 18);
