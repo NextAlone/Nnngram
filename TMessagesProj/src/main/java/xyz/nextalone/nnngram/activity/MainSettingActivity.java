@@ -124,8 +124,6 @@ public class MainSettingActivity extends BaseActivity {
             Browser.openUrl(context, "tg://update");
         } else if (position == passcodeRow) {
             presentFragment(new PasscodeSettingActivity());
-        } else if (id == reset_settings) {
-            resetSettings(getParentActivity());
         }
     }
 
@@ -203,6 +201,8 @@ public class MainSettingActivity extends BaseActivity {
                         }
                     });
                     presentFragment(fragment);
+                } else if (id == reset_settings) {
+                    resetSettings(getParentActivity());
                 }
             }
         });
