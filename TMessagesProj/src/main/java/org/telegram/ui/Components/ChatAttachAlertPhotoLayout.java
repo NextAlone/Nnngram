@@ -3872,7 +3872,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
     }
 
     public void setCheckCameraWhenShown(boolean checkCameraWhenShown) {
-        this.checkCameraWhenShown = checkCameraWhenShown;
+        this.checkCameraWhenShown = checkCameraWhenShown && !Config.disableInstantCamera;
     }
 
     @Override
@@ -4086,7 +4086,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
 
     @Override
     public void onOpenAnimationEnd() {
-        checkCamera(parentAlert != null && parentAlert.baseFragment instanceof ChatActivity);
+        checkCamera(parentAlert != null && parentAlert.baseFragment instanceof ChatActivity && !Config.disableInstantCamera);
     }
 
     @Override
