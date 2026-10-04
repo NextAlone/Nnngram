@@ -21,12 +21,13 @@ package xyz.nextalone.nnngram.helpers
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import xyz.nextalone.nnngram.utils.Log
 import org.telegram.messenger.ApplicationLoader
 import org.telegram.messenger.LocaleController
 import org.telegram.messenger.R
+import xyz.nextalone.nnngram.utils.Log
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToLong
 
 object ProfileDateHelper {
@@ -52,7 +53,7 @@ object ProfileDateHelper {
     }
 
     fun getUserTime(key: String, stringRes: Int, date: Long): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM", LocaleController.getInstance().currentLocale)
+        val dateFormat = SimpleDateFormat("yyyy-MM", LocaleController.getInstance().currentLocale ?: Locale.getDefault())
         val st = dateFormat.format(Date(date))
         return LocaleController.formatString(key, stringRes, st)
     }
@@ -77,7 +78,7 @@ object ProfileDateHelper {
                 return getUserTime("RegistrationDateApproximately", R.string.RegistrationDateApproximately, dateLong)
             }
         }
-        if (userId <= 1000000L) {
+        if (userId < dataList.first().id) {
             return getUserTime("RegistrationDateOlder", R.string.RegistrationDateOlder, dataList.first().date * 1000)
         }
         return getUserTime("RegistrationDateNewer", R.string.RegistrationDateNewer, dataList.last().date * 1000)
