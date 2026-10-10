@@ -1974,8 +1974,10 @@ public class MessageObject {
         }
 
         updateMessageText(users, chats, sUsers, sChats);
-        // 重置并重新计算过滤动作 — 此刻 messageText/caption 已就绪, 规则引擎的文本匹配才能准确生效.
-        // HIDE 已在上方 isBlockedMessage() 处被 generateLayout=false 处理过; 此处处理 SPOILER/COLLAPSE.
+        // 重置并重新计算过滤动作 — 此刻 messageText 已就绪, 但 caption 要等下方 generateCaption() 才生成;
+        // 规则引擎的文本匹配由 getFilterAction() 内部用 messageOwner.message 兜底 (见该方法的 filterText).
+        // HIDE 若在上方 isBlockedMessage() 就已判定, 那里已置 generateLayout=false; 文本规则命中的 HIDE 由渲染层消费.
+        // 此处处理 SPOILER/COLLAPSE.
         filterAction = -1;
         int __filterAct = getFilterAction();
         if (__filterAct == MessageFilterRules.ACTION_SPOILER
@@ -6909,11 +6911,29 @@ public class MessageObject {
     }
 
     /**
-     * 规则变更后被调用: 重算 filterAction, 对 SPOILER 增删 entity, 重跑文本/caption layout 让更改可见.
-     * 对 COLLAPSE 动作因 messageText 已被替换, 不做恢复 (v1 限制, 需重开聊天).
+     * 规则变更后被调用: 重算 filterAction, 对 SPOILER/COLLAPSE 做增删, 重跑 layout 让更改可见.
+     * 组内传播下发的动作会在这里被清掉, 由 ChatActivity 随后重算并再次下发 (见 {@link #applyGroupFilterAction(int)}).
      */
     public void reapplyFilterAction() {
         filterAction = -1;
+        applyFilterActionNow();
+    }
+
+    /**
+     * 组内传播: 媒体相册 (grouped_id 相同的一组消息) 的说明文字只挂在其中一条消息上,
+     * 单靠文本匹配只能处理 1/N. 由 ChatActivity 取组内最高动作后下发, 让整组表现一致
+     * (HIDE 整组隐藏 / SPOILER 整组遮罩 / COLLAPSE 整组折叠). 幂等: 动作没有提高时直接返回.
+     *
+     * @return true 表示动作确实被提高, 调用方必须刷新界面 —— 否则已经绑定到 cell 的消息不会重绘.
+     */
+    public boolean applyGroupFilterAction(int act) {
+        if (act == MessageFilterRules.ACTION_NONE || act <= getFilterAction()) return false;
+        filterAction = act;
+        applyFilterActionNow();
+        return true;
+    }
+
+    private void applyFilterActionNow() {
         int act = getFilterAction();
         // SPOILER entity 增/删
         if (act == MessageFilterRules.ACTION_SPOILER && filterSpoilerEntity == null && !isRestrictedMessage) {
@@ -6946,10 +6966,13 @@ public class MessageObject {
             forceUpdate = true;
         }
         generateLayout(null);
-        if (caption != null) {
-            caption = null;
-            generateCaption();
-        }
+        // messageText / isRestrictedMessage 变了要重算 type: 折叠时 isRestrictedMessage=true 会让 type 变 TYPE_TEXT,
+        // 媒体才会被占位文字取代 (与构造期 setType() 在 COLLAPSE 之后调用的顺序一致).
+        setType();
+        // caption 一律重建: 撤销 COLLAPSE 时 caption 已被清空, 只在 caption != null 时重建会把它永久丢掉.
+        // 无说明文字的消息 generateCaption() 内部不会赋值, caption 保持 null.
+        caption = null;
+        generateCaption();
     }
 
 
@@ -12683,17 +12706,28 @@ public class MessageObject {
             }
             if (blocked) result = MessageFilterRules.ACTION_HIDE;
         }
+        // 媒体消息的 caption 要到构造末尾的 generateCaption() 才生成, 而本方法在构造中途就会被调用:
+        // 此时 caption 仍是 null, messageText 又已被 updateMessageText() 换成 "视频"/"相册" 等占位串,
+        // 说明文字里的关键词两个来源都看不到 —— 用 messageOwner.message (即 caption 原文) 兜底.
+        // 三个前提缺一不可:
+        //   messageText 已就绪 — 构造最开头那次判定 (isBlockedMessage) 保持原行为, 避免 pangu 改写前后不一致;
+        //   媒体消息           — 纯文本/服务消息的原文本来就在 messageText 里, 无需兜底;
+        //   未处于折叠态       — 折叠是刻意替换 messageText/caption, 兜底会让规则永远撤销不掉.
+        CharSequence filterText = caption;
+        if (filterText == null && messageText != null && !isMediaEmpty() && !filterCollapsedApplied) {
+            filterText = messageOwner.message;
+        }
         if (result != MessageFilterRules.ACTION_HIDE && !TextUtils.isEmpty(Config.getMessageFilter())) {
             var pattern = Pattern.compile(Config.getMessageFilter());
             if ((messageText != null && pattern.matcher(messageText).find())
-                || (caption != null && pattern.matcher(caption).find())) {
+                || (filterText != null && pattern.matcher(filterText).find())) {
                 result = MessageFilterRules.ACTION_HIDE;
             }
         }
         if (result != MessageFilterRules.ACTION_HIDE) {
             long viaBotId = messageOwner != null ? messageOwner.via_bot_id : 0L;
             String viaBotName = messageOwner != null ? messageOwner.via_bot_name : null;
-            int fromRules = MessageFilterRules.match(messageText, caption, getSenderId(), viaBotId, viaBotName);
+            int fromRules = MessageFilterRules.match(messageText, filterText, getSenderId(), viaBotId, viaBotName);
             if (fromRules > result) result = fromRules;
         }
         filterAction = result;
