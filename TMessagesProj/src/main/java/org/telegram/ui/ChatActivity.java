@@ -375,6 +375,7 @@ import xyz.nextalone.nnngram.activity.MessageDetailActivity;
 import xyz.nextalone.nnngram.config.ConfigManager;
 import xyz.nextalone.nnngram.config.DialogConfig;
 import xyz.nextalone.nnngram.config.ForwardContext;
+import xyz.nextalone.nnngram.helpers.MessageFilterRules;
 import xyz.nextalone.nnngram.helpers.MessageHelper;
 import xyz.nextalone.nnngram.helpers.MessageMenuCompact;
 import xyz.nextalone.nnngram.helpers.MentionReadHelper;
@@ -21136,6 +21137,44 @@ public class ChatActivity extends BaseFragment implements
         }
     }
 
+    /**
+     * 组内传播: 媒体相册 (grouped_id 相同的一组消息) 的说明文字只挂在其中一条消息上, 单靠文本匹配只能处理 1/N.
+     * 这里取组内最高动作下发给全组, 让整组表现一致
+     * (HIDE 整组隐藏 / SPOILER 整组遮罩 / COLLAPSE 整组折叠). 幂等: 组内动作已一致时不做任何事.
+     *
+     * @return true 表示有消息的动作被提高, 调用方必须刷新界面, 否则已绑定到 cell 的消息不会重绘.
+     */
+    private boolean applyFilterActionToMessageGroups() {
+        boolean changed = false;
+        for (int a = 0; a < groupedMessagesMap.size(); a++) {
+            MessageObject.GroupedMessages group = groupedMessagesMap.valueAt(a);
+            if (group == null || group.messages.size() < 2) {
+                continue;
+            }
+            int max = MessageFilterRules.ACTION_NONE;
+            for (int b = 0; b < group.messages.size(); b++) {
+                int act = group.messages.get(b).getFilterAction();
+                if (act > max) max = act;
+            }
+            if (max == MessageFilterRules.ACTION_NONE) {
+                continue;
+            }
+            // 组内传播的动作选择:
+            //   HIDE     — 整组隐藏, cell 直接 GONE ✓
+            //   SPOILER  — 整组遮罩, 媒体走 hasMediaSpoilers ✓
+            //   COLLAPSE — 实测在媒体组里无效: 折叠靠 messageText 变占位 + type=TYPE_TEXT 生效,
+            //              但相册的格子仍按图片/视频渲染 (9 图相册设成折叠后 9 张照旧显示).
+            //              所以对媒体组统一降级为 HIDE —— 整组消失, 与"整组一起处理"的预期一致.
+            int memberAct = max == MessageFilterRules.ACTION_COLLAPSE ? MessageFilterRules.ACTION_HIDE : max;
+            for (int b = 0; b < group.messages.size(); b++) {
+                if (group.messages.get(b).applyGroupFilterAction(memberAct)) {
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
         if (id == NotificationCenter.messageFilterRulesChanged) {
@@ -21146,11 +21185,18 @@ public class ChatActivity extends BaseFragment implements
             if (chatAdapter != null && chatAdapter.frozenMessages != null) {
                 for (MessageObject m : chatAdapter.frozenMessages) m.reapplyFilterAction();
             }
+            applyFilterActionToMessageGroups();
             if (chatAdapter != null) chatAdapter.notifyDataSetChanged();
             return;
         }
         if (id == NotificationCenter.messagesDidLoad) {
             didReceivedNotification_messagesDidLoad(id, account, args);
+            // 消息列表重建后做组内传播. 必须放在这个分派点而不是 messagesDidLoad 方法末尾:
+            // 那个方法内部有 8 处提前 return, 放在末尾大多数加载路径根本走不到.
+            // 有动作变化时必须刷新界面, 否则已绑定到 cell 的消息不会重绘 —— 这正是"只处理了第一条"的原因.
+            if (applyFilterActionToMessageGroups() && chatAdapter != null) {
+                chatAdapter.notifyDataSetChanged();
+            }
         } else {
             didReceivedNotification2(id, account, args);
             didReceivedNotification3(id, account, args);
@@ -26888,6 +26934,9 @@ public class ChatActivity extends BaseFragment implements
         }
         if (currentUser != null && currentUser.bot) {
             updateTopPanel(true);
+        }
+        if (applyFilterActionToMessageGroups() && chatAdapter != null) {
+            chatAdapter.notifyDataSetChanged();
         }
     }
 
