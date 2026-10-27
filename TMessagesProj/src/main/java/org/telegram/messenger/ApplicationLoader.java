@@ -292,6 +292,9 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
+        if (true) {
+            throw new RuntimeException("NekoX");
+        }
         applicationLoaderInstance = this;
         try {
             applicationContext = getApplicationContext();
