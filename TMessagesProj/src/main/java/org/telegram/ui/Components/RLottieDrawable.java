@@ -666,8 +666,14 @@ public class RLottieDrawable extends BitmapDrawable implements Animatable, Bitma
         } else {
             isSingleChannel = false;
 
+            // [本机构建临时改动 - 构建后可按需还原] 原逻辑在 debug 版直接抛异常.
+            // 本仓库 res/raw/bot.tgs 是 dotLottie 容器 (内容以 {"tgs":1 开头), 没有根级 fr/ip/op,
+            // GenerateLottieMetadataAssetFileTask 解析不出元数据会静默跳过它 -> lottie_meta.bin 里没有这条 ->
+            // ResLottieMeta.find() 返回 NOT_FOUND -> debug 包一进登录页就闪退
+            // (release 版 BuildConfig.DEBUG=false, 走下面的 readRes 兜底所以没事).
+            // 这里改成与 release 一致: 只记录, 继续走兜底.
             if (BuildConfig.DEBUG) {
-                throw new IllegalArgumentException("rawRes not found");
+                FileLog.e(new IllegalArgumentException("ResLottieMeta: no metadata for rawRes 0x" + Integer.toHexString(rawRes) + ", falling back to readRes"));
             }
 
             String jsonString = readRes(rawRes);
