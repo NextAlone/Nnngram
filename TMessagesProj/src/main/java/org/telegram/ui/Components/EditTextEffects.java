@@ -32,6 +32,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.Layout;
 import android.text.Spannable;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.EditText;
@@ -309,7 +310,8 @@ public class EditTextEffects extends EditText {
                 !Build.MANUFACTURER.toLowerCase().contains("honor") &&
                 !Build.MANUFACTURER.toLowerCase().contains("huawei") &&
                 !Build.MANUFACTURER.toLowerCase().contains("alps") &&
-                !Build.MANUFACTURER.toLowerCase().contains("vivo")
+                !Build.MANUFACTURER.toLowerCase().contains("vivo") &&
+                TextUtils.isEmpty(AndroidUtilities.getSystemProperty("ro.build.version.oplusrom"))
             ) && (
                 Build.MODEL == null ||
                 !Build.MODEL.toLowerCase().contains("mediapad")
