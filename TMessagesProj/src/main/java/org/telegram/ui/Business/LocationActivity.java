@@ -42,6 +42,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BotWebViewVibrationEffect;
@@ -58,22 +59,23 @@ import org.telegram.messenger.WebFile;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.SimpleActionBarDoneButton;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ActionBar.ThemeBind;
 import org.telegram.ui.Components.AnimatedColor;
 import org.telegram.ui.Components.AnimatedTextView;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.ChatAttachAlertLocationLayout;
-import org.telegram.ui.Components.CircularProgressDrawable;
 import org.telegram.ui.Components.ClipRoundedDrawable;
-import org.telegram.ui.Components.CrossfadeDrawable;
 import org.telegram.ui.Components.CubicBezierInterpolator;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
 import org.telegram.ui.Components.UniversalRecyclerView;
@@ -86,8 +88,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
     private UniversalRecyclerView listView;
 
     private static final int done_button = 1;
-    private CrossfadeDrawable doneButtonDrawable;
-    private ActionBarMenuItem doneButton;
+    private SimpleActionBarDoneButton doneButton;
 
     private boolean ignoreEditText;
     private FrameLayout editTextContainer;
@@ -100,11 +101,16 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
 
     final int MAX_NAME_LENGTH = 96;
     @Override
+    protected boolean useSimpleActionBar() {
+        return true;
+    }
+
+    @Override
     public View createView(Context context) {
-        actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle(getString(R.string.BusinessLocation));
-        actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
+        setHasOwnBackground(true);
+        simpleActionBar.setBackButtonImage(R.drawable.ic_ab_back);
+        simpleActionBar.setTitle(getString(R.string.BusinessLocation));
+        simpleActionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
@@ -117,15 +123,10 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             }
         });
 
-        Drawable checkmark = context.getResources().getDrawable(R.drawable.ic_ab_done).mutate();
-        checkmark.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_actionBarDefaultIcon), PorterDuff.Mode.MULTIPLY));
-        doneButtonDrawable = new CrossfadeDrawable(checkmark, new CircularProgressDrawable(Theme.getColor(Theme.key_actionBarDefaultIcon)));
-        doneButton = actionBar.createMenu().addItemWithWidth(done_button, doneButtonDrawable, AndroidUtilities.dp(56), LocaleController.getString(R.string.Done));
+        doneButton = simpleActionBar.createDoneButton(done_button, LocaleController.getString(R.string.Save));
         checkDone(false);
 
         FrameLayout contentView = new FrameLayout(context);
-        contentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
-
         editText = new EditTextBoldCursor(getContext()) {
             AnimatedColor limitColor = new AnimatedColor(this);
             private int limitCount;
@@ -158,8 +159,8 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             }
         };
         editText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
-        editText.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
-        editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        ThemeBind.hintTextColor(editText, Theme.key_windowBackgroundWhiteHintText);
+        ThemeBind.textColor(editText, Theme.key_windowBackgroundWhiteBlackText);
         editText.setBackgroundDrawable(null);
         editText.setMaxLines(5);
         editText.setSingleLine(false);
@@ -167,7 +168,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
         editText.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
         editText.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_AUTO_CORRECT);
         editText.setHint(getString(R.string.BusinessLocationAddress));
-        editText.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        ThemeBind.cursorColor(editText, Theme.key_windowBackgroundWhiteBlackText);
         editText.setCursorSize(dp(19));
         editText.setCursorWidth(1.5f);
         editText.addTextChangedListener(new TextWatcher() {
@@ -200,7 +201,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
         });
         editTextContainer = new FrameLayout(context);
         editTextContainer.addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 21, 15, 21, 15));
-        editTextContainer.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+        ThemeBind.backgroundColor(editTextContainer, Theme.key_windowBackgroundWhite, getResourceProvider());
         if (editText != null) {
             ignoreEditText = true;
             editText.setText(address);
@@ -237,7 +238,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
         svgThumb.setParent(mapPreview.getImageReceiver());
         mapLoadingDrawable = new ClipRoundedDrawable(svgThumb);
         mapLoadingDrawable.setCallback(mapPreview);
-        mapPreview.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+        ThemeBind.backgroundColor(mapPreview, Theme.key_windowBackgroundWhite, getResourceProvider());
 
         mapMarker = new View(context) {
             final Drawable pin = getContext().getResources().getDrawable(R.drawable.map_pin_photo).mutate();
@@ -268,9 +269,9 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
 
         listView = new UniversalRecyclerView(this, this::fillItems, this::onClick, null);
         listView.setSections();
+        listView.setSectionsDrawBackground(true);
         listView.adapter.setApplyBackground(false);
         contentView.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-        actionBar.setAdaptiveBackground(listView, true);
 
         setValue();
 
@@ -279,7 +280,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
 
     @Override
     public boolean onFragmentCreate() {
-        getNotificationCenter().addObserver(this, NotificationCenter.userInfoDidLoad);
+        getNotificationCenter().addWeakObserver(this, NotificationCenter.userInfoDidLoad);
         return super.onFragmentCreate();
     }
 
@@ -370,14 +371,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
     private void checkDone(boolean animated) {
         if (doneButton == null) return;
         final boolean hasChanges = hasChanges();
-        doneButton.setEnabled(hasChanges);
-        if (animated) {
-            doneButton.animate().alpha(hasChanges ? 1.0f : 0.0f).scaleX(hasChanges ? 1.0f : 0.0f).scaleY(hasChanges ? 1.0f : 0.0f).setDuration(180).start();
-        } else {
-            doneButton.setAlpha(hasChanges ? 1.0f : 0.0f);
-            doneButton.setScaleX(hasChanges ? 1.0f : 0.0f);
-            doneButton.setScaleY(hasChanges ? 1.0f : 0.0f);
-        }
+        doneButton.setActive(hasChanges, animated);
         if (listView != null && listView.adapter != null && clearVisible != (currentLocation != null && (geo != null || !TextUtils.isEmpty(address)))) {
             listView.adapter.update(true);
         }
@@ -385,7 +379,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
 
     private int shiftDp = -4;
     private void processDone() {
-        if (doneButtonDrawable.getProgress() > 0f) return;
+        if (doneButton.isLoading()) return;
 
         final boolean empty = geo == null && TextUtils.isEmpty(address);
         if (!empty) {
@@ -402,7 +396,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             }
         }
 
-        doneButtonDrawable.animateToProgress(1f);
+        doneButton.setLoading(true, true);
         TLRPC.UserFull userFull = getMessagesController().getUserFull(getUserConfig().getClientUserId());
         TL_account.updateBusinessLocation req = new TL_account.updateBusinessLocation();
         if (!empty) {
@@ -435,10 +429,10 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
 
         getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
             if (err != null) {
-                doneButtonDrawable.animateToProgress(0f);
+                doneButton.setLoading(false, true);
                 BulletinFactory.showError(err);
             } else if (res instanceof TLRPC.TL_boolFalse) {
-                doneButtonDrawable.animateToProgress(0f);
+                doneButton.setLoading(false, true);
                 BulletinFactory.of(this).createErrorBulletin(LocaleController.getString(R.string.UnknownError)).show();
             } else {
                 finishFragment();
@@ -502,7 +496,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
             builder.setTitle(LocaleController.getString(R.string.BusinessLocationClearTitle));
             builder.setMessage(LocaleController.getString(R.string.BusinessLocationClearMessage));
             builder.setPositiveButton(LocaleController.getString(R.string.Remove), (di, w) -> {
-                doneButtonDrawable.animateToProgress(1f);
+                doneButton.setLoading(true, true);
                 TLRPC.UserFull userFull = getMessagesController().getUserFull(getUserConfig().getClientUserId());
                 TL_account.updateBusinessLocation req = new TL_account.updateBusinessLocation();
                 if (userFull != null) {
@@ -510,7 +504,7 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
                     userFull.flags2 &=~ 2;
                 }
                 getConnectionsManager().sendRequest(req, (res, err) -> AndroidUtilities.runOnUIThread(() -> {
-                    doneButtonDrawable.animateToProgress(0f);
+                    doneButton.setLoading(false, true);
                     if (err != null) {
                         BulletinFactory.showError(err);
                     } else if (res instanceof TLRPC.TL_boolFalse) {
@@ -584,9 +578,11 @@ public class LocationActivity extends BaseFragment implements NotificationCenter
     public boolean isSupportEdgeToEdge() {
         return true;
     }
+
+    @Nullable
     @Override
-    public void onInsets(int left, int top, int right, int bottom) {
-        listView.setPadding(0, 0, 0, bottom);
-        listView.setClipToPadding(false);
+    protected RecyclerListView getListViewForSimpleGlass() {
+        return listView;
     }
+
 }

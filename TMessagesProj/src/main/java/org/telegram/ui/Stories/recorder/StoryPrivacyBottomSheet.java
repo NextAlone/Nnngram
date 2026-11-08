@@ -79,6 +79,7 @@ import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.Emoji;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
@@ -97,6 +98,7 @@ import org.telegram.ui.ActionBar.BackDrawable;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.ActionBar.ThemeBind;
 import org.telegram.ui.Cells.GraySectionCell;
 import org.telegram.ui.Cells.SlideIntChooseView;
 import org.telegram.ui.Cells.TextCell;
@@ -255,7 +257,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                     }
                 }
             };
-            searchField.setBackgroundColor(getThemedColor(Theme.key_dialogBackground));
+            ThemeBind.backgroundColor(searchField, Theme.key_dialogBackground, StoryPrivacyBottomSheet.this.resourcesProvider);
             searchField.setOnSearchTextChange(this::onSearch);
 
             headerView = new HeaderCell(context, resourcesProvider);
@@ -641,7 +643,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             buttonContainer.setClickable(true);
             buttonContainer.setOrientation(LinearLayout.VERTICAL);
             buttonContainer.setPadding(dp(10) + backgroundPaddingLeft, dp(10), dp(10) + backgroundPaddingLeft, dp(10));
-            buttonContainer.setBackgroundColor(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
+            ThemeBind.backgroundColor(buttonContainer, Theme.key_dialogBackground, resourcesProvider);
 
             button = new ButtonWithCounterView(context, resourcesProvider);
             button.setOnClickListener(this::onButton1Click);
@@ -654,7 +656,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             buttonContainer.addView(button2, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.FILL_HORIZONTAL, 0, 8, 0, 0));
 
             underKeyboardView = new View(context);
-            underKeyboardView.setBackgroundColor(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
+            ThemeBind.backgroundColor(underKeyboardView, Theme.key_dialogBackground, resourcesProvider);
             addView(underKeyboardView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 500, Gravity.BOTTOM | Gravity.FILL_HORIZONTAL, 0, 0, 0, -500));
 
             addView(buttonContainer, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.FILL_HORIZONTAL));
@@ -778,13 +780,13 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             if (!nonContactsUsers.isEmpty()) {
                 if (groupUsers.isEmpty()) {
                     new AlertDialog.Builder(getContext(), resourcesProvider)
-                        .setMessage("All group members are not in your contact list.")
-                        .setNegativeButton("Cancel", null)
+                        .setMessage(getString(R.string.StoryPrivacyGroupNoContacts))
+                        .setNegativeButton(getString(R.string.Cancel), null)
                         .show();
                 } else {
                     new AlertDialog.Builder(getContext(), resourcesProvider)
-                        .setMessage(nonContactsUsers.size() + " members are not in your contact list")
-                        .setPositiveButton("Add " + groupUsers.size() + " contacts", (di, a) -> {
+                        .setMessage(LocaleController.formatPluralString("StoryPrivacyGroupNonContacts", nonContactsUsers.size()))
+                        .setPositiveButton(LocaleController.formatPluralString("StoryPrivacyGroupAddContacts", groupUsers.size()), (di, a) -> {
                             selectedUsersByGroup.put(id, groupUsers);
                             for (long userId : groupUsers) {
                                 changelog.put(userId, true);
@@ -795,7 +797,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                             di.dismiss();
                             searchField.scrollToBottom();
                         })
-                        .setNegativeButton("Cancel", null)
+                        .setNegativeButton(getString(R.string.Cancel), null)
                         .show();
                 }
             } else {
@@ -1983,7 +1985,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
         @Override
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.chatInfoDidLoad);
+            NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.chatInfoDidLoad);
         }
 
         @Override
@@ -2040,7 +2042,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                     view = new HeaderCell2(context, resourcesProvider, false);
                 } else if (viewType == VIEW_TYPE_HEADER_CELL) {
                     view = new org.telegram.ui.Cells.HeaderCell(context, resourcesProvider);
-                    view.setBackgroundColor(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
+                    ThemeBind.backgroundColor(view, Theme.key_dialogBackground, resourcesProvider);
                 } else if (viewType == VIEW_TYPE_NO_USERS) {
                     StickerEmptyView searchEmptyView = new StickerEmptyView(context, null, StickerEmptyView.STICKER_TYPE_SEARCH, resourcesProvider);
                     searchEmptyView.title.setText(getString(R.string.NoResult));
@@ -2229,12 +2231,12 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             }
         });
 
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.contactsDidLoad);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.storiesBlocklistUpdate);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.storiesSendAsUpdate);
+        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.contactsDidLoad);
+        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.storiesBlocklistUpdate);
+        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.storiesSendAsUpdate);
 
         backgroundPaint.setColor(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
-        fixNavigationBar(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
+        fixNavigationBarKey(Theme.key_dialogBackground);
 
         containerView = new ContainerView(context);
 
@@ -2286,6 +2288,19 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
         };
         viewPager.setPadding(backgroundPaddingLeft, 0, backgroundPaddingLeft, 0);
         containerView.addView(viewPager, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.FILL));
+    }
+
+    @Override
+    public void onThemeColorsChanged() {
+        super.onThemeColorsChanged();
+        try {
+            backgroundPaint.setColor(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
+            if (containerView != null) {
+                containerView.invalidate();
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
     }
 
     @Override
@@ -3019,7 +3034,24 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
         return chats;
     }
 
-    public static class UserCell extends FrameLayout {
+    public static class UserCell extends FrameLayout implements Theme.Colorable {
+
+        @Override
+        public void updateColors() {
+            try {
+                if (arrowPaint != null) {
+                    arrowPaint.setColor(Theme.multAlpha(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider), .3f));
+                    invalidate();
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
+
+        @Override
+        public void addColorKeys(HashSet<Integer> colors) {
+            colors.add(Theme.key_windowBackgroundWhiteBlackText);
+        }
 
         private final Theme.ResourcesProvider resourcesProvider;
 
@@ -3051,14 +3083,14 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             titleTextView = new SimpleTextView(context);
             titleTextView.setTypeface(AndroidUtilities.bold());
             titleTextView.setTextSize(16);
-            titleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            ThemeBind.textColor(titleTextView, Theme.key_dialogTextBlack, resourcesProvider);
             titleTextView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
             NotificationCenter.listenEmojiLoading(titleTextView);
             addView(titleTextView);
 
             subtitleTextView = new SimpleTextView(context);
             subtitleTextView.setTextSize(14);
-            subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextBlack, resourcesProvider);
             subtitleTextView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
             NotificationCenter.listenEmojiLoading(subtitleTextView);
             addView(subtitleTextView);
@@ -3073,7 +3105,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
 
             radioButton = new RadioButton(context);
             radioButton.setSize(AndroidUtilities.dp(20));
-            radioButton.setColor(Theme.getColor(Theme.key_checkboxDisabled, resourcesProvider), Theme.getColor(Theme.key_dialogRadioBackgroundChecked, resourcesProvider));
+            ThemeBind.radioColors(radioButton, Theme.key_checkboxDisabled, Theme.key_dialogRadioBackgroundChecked, resourcesProvider);
             addView(radioButton);
             radioButton.setVisibility(View.GONE);
 
@@ -3166,10 +3198,10 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             isOnline[0] = false;
             if (sendAs) {
                 setSubtitle(getString(R.string.VoipGroupPersonalAccount));
-                subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextGray3, resourcesProvider));
+                ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextGray3, resourcesProvider);
             } else {
                 setSubtitle(LocaleController.formatUserStatus(UserConfig.selectedAccount, user, isOnline));
-                subtitleTextView.setTextColor(Theme.getColor(isOnline[0] ? Theme.key_dialogTextBlue2 : Theme.key_dialogTextGray3, resourcesProvider));
+                ThemeBind.textColor(subtitleTextView, isOnline[0] ? Theme.key_dialogTextBlue2 : Theme.key_dialogTextGray3, resourcesProvider);
             }
 
             checkBox.setVisibility(needCheck ? View.VISIBLE : View.GONE);
@@ -3224,7 +3256,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                 }
             }
             setSubtitle(subtitle);
-            subtitleTextView.setTextColor(Theme.getColor(isOnline[0] ? Theme.key_dialogTextBlue2 : Theme.key_dialogTextGray3, resourcesProvider));
+            ThemeBind.textColor(subtitleTextView, isOnline[0] ? Theme.key_dialogTextBlue2 : Theme.key_dialogTextGray3, resourcesProvider);
 
             checkBox.setVisibility(needCheck ? View.VISIBLE : View.GONE);
             radioButton.setVisibility(View.GONE);
@@ -3254,7 +3286,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                 } else {
                     setSubtitle(withArrow(getString(R.string.StoryPrivacyOptionContactsDetail)));
                 }
-                subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2, resourcesProvider));
+                ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextBlue2, resourcesProvider);
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_FILTER_CHANNELS);
                 avatarDrawable.setColor(0xFF16A5F2, 0xFF1180F7);
             } else if (type == TYPE_CONTACTS) {
@@ -3268,7 +3300,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                 } else {
                     setSubtitle(withArrow(getString(R.string.StoryPrivacyOptionContactsDetail)));
                 }
-                subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2, resourcesProvider));
+                ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextBlue2, resourcesProvider);
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_FILTER_CONTACTS);
                 avatarDrawable.setColor(0xFFC468F2, 0xFF965CFA);
             } else if (type == TYPE_CLOSE_FRIENDS) {
@@ -3282,7 +3314,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                 } else {
                     setSubtitle(withArrow(getString(R.string.StoryPrivacyOptionCloseFriendsDetail)));
                 }
-                subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2, resourcesProvider));
+                ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextBlue2, resourcesProvider);
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_CLOSE_FRIENDS);
                 avatarDrawable.setColor(0xFF88D93A, 0xFF2DB63B);
             } else if (type == TYPE_SELECTED_CONTACTS) {
@@ -3296,7 +3328,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                 } else {
                     setSubtitle(withArrow(getString(R.string.StoryPrivacyOptionSelectedContactsDetail)));
                 }
-                subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlue2, resourcesProvider));
+                ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextBlue2, resourcesProvider);
                 avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_FILTER_GROUPS);
                 avatarDrawable.setColor(0xFFFFB743, 0xFFF68E34);
             }
@@ -3398,13 +3430,13 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             this.resourcesProvider = resourcesProvider;
 
             titleTextView = new TextView(context);
-            titleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            ThemeBind.textColor(titleTextView, Theme.key_dialogTextBlack, resourcesProvider);
             titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
             titleTextView.setTypeface(AndroidUtilities.bold());
             addView(titleTextView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.FILL_HORIZONTAL, 27, 16, 27, withSubtitle ? 4 : 13));
 
             subtitleTextView = new TextView(context);
-            subtitleTextView.setTextColor(Theme.getColor(Theme.key_dialogTextGray2, resourcesProvider));
+            ThemeBind.textColor(subtitleTextView, Theme.key_dialogTextGray2, resourcesProvider);
             subtitleTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
             if (withSubtitle) {
                 addView(subtitleTextView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.FILL_HORIZONTAL, 27, 0, 27, 13));
@@ -3435,7 +3467,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             textView.setTypeface(AndroidUtilities.bold());
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
             textView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
-            textView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider));
+            ThemeBind.textColor(textView, Theme.key_dialogTextBlack, resourcesProvider);
             addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL | Gravity.FILL_HORIZONTAL, LocaleController.isRTL ? 16 : 53, 0, LocaleController.isRTL ? 53 : 16, 0));
 
             closeView = new ImageView(context);
@@ -3487,7 +3519,21 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
         }
     }
 
-    public static class SearchUsersCell extends ScrollView {
+    public static class SearchUsersCell extends ScrollView implements Theme.Colorable {
+
+        @Override
+        public void updateColors() {
+            try {
+                if (editText != null) {
+                    editText.setHintColor(Theme.getColor(Theme.key_groupcreate_hintText, resourcesProvider));
+                    editText.setCursorColor(Theme.getColor(Theme.key_groupcreate_cursor, resourcesProvider));
+                    editText.setHandlesColor(Theme.getColor(Theme.key_groupcreate_cursor, resourcesProvider));
+                }
+                AndroidUtilities.setScrollViewEdgeEffectColor(this, Theme.getColor(Theme.key_windowBackgroundWhite));
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
 
         private final Theme.ResourcesProvider resourcesProvider;
 
@@ -3535,10 +3581,10 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
                 editText.setRevealOnFocusHint(false);
             }
             editText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-            editText.setHintColor(Theme.getColor(Theme.key_groupcreate_hintText, resourcesProvider));
-            editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
-            editText.setCursorColor(Theme.getColor(Theme.key_groupcreate_cursor, resourcesProvider));
-            editText.setHandlesColor(Theme.getColor(Theme.key_groupcreate_cursor, resourcesProvider));
+            ThemeBind.editHintColor(editText, Theme.key_groupcreate_hintText, resourcesProvider);
+            ThemeBind.textColor(editText, Theme.key_windowBackgroundWhiteBlackText, resourcesProvider);
+            ThemeBind.cursorColor(editText, Theme.key_groupcreate_cursor, resourcesProvider);
+            ThemeBind.editHandlesColor(editText, Theme.key_groupcreate_cursor, resourcesProvider);
             editText.setCursorWidth(1.5f);
             editText.setInputType(editText.getInputType() | InputType.TYPE_TEXT_VARIATION_FILTER);
             editText.setSingleLine(true);
@@ -4720,10 +4766,10 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
             });
 
             headerView = new TextView(getContext());
-            headerView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
+            ThemeBind.textColor(headerView, Theme.key_windowBackgroundWhiteBlackText, resourcesProvider);
             headerView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
             headerView.setPadding(backgroundPaddingLeft + dp(22), dp(2), backgroundPaddingLeft + dp(22), dp(14));
-            headerView.setBackgroundColor(Theme.getColor(Theme.key_dialogBackground, resourcesProvider));
+            ThemeBind.backgroundColor(headerView, Theme.key_dialogBackground, resourcesProvider);
             headerView.setTypeface(AndroidUtilities.bold());
             headerView.setText(getString(isLive ? R.string.StoryPrivacyPublishLiveAs : R.string.StoryPrivacyPublishAs));
             containerView.addView(headerView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
@@ -4732,7 +4778,7 @@ public class StoryPrivacyBottomSheet extends BottomSheet implements Notification
         @Override
         public void onAttachedToWindow() {
             super.onAttachedToWindow();
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.storiesSendAsUpdate);
+            NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.storiesSendAsUpdate);
         }
 
         @Override

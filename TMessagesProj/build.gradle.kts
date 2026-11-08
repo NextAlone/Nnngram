@@ -93,6 +93,7 @@ dependencies {
     compileOnly(libs.checker.qual)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.config)
+    implementation(libs.firebase.pnv)
     implementation(libs.play.services.vision)
     implementation(libs.play.services.wearable)
     implementation(libs.play.services.location)
