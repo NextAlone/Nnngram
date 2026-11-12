@@ -179,7 +179,7 @@ object PermissionUtils {
         } else {
             requestPermissions(
                 activity,
-                BasePermissionsActivity.REQUEST_CODE_CALLS,
+                requestCode,
                 Manifest.permission.RECORD_AUDIO
             )
         }

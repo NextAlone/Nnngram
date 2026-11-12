@@ -1134,8 +1134,8 @@ public class VoIPFragment implements
                         FileLog.e(e);
                     }
                 } else {
-                    if (PermissionUtils.isRecordAudioPermissionGranted()) {
-                        PermissionUtils.requestRecordAudioPermission(activity);
+                    if (!PermissionUtils.isRecordAudioPermissionGranted()) {
+                        PermissionUtils.requestRecordAudioPermission(activity, 101);
                     } else {
                         if (VoIPService.getSharedState() != null) {
                             runAcceptCallAnimation(() -> {
