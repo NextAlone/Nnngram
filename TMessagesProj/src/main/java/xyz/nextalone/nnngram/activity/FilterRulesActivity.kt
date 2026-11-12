@@ -22,11 +22,13 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.RadioButton
@@ -111,12 +113,13 @@ class FilterRulesActivity : BaseActivity() {
             background = null
             setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14f)
             setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider))
-            setCursorColor(Theme.getColor(Theme.key_dialogTextBlack))
+            setCursorColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider))
+            setHintColor(Theme.getColor(Theme.key_dialogTextHint, resourcesProvider))
             setHintText(LocaleController.getString("FilterRulesImportHint", R.string.FilterRulesImportHint))
             setLineColors(
-                Theme.getColor(Theme.key_windowBackgroundWhiteInputField),
-                Theme.getColor(Theme.key_windowBackgroundWhiteInputFieldActivated),
-                Theme.getColor(Theme.key_text_RedRegular),
+                Theme.getColor(Theme.key_windowBackgroundWhiteInputField, resourcesProvider),
+                Theme.getColor(Theme.key_windowBackgroundWhiteInputFieldActivated, resourcesProvider),
+                Theme.getColor(Theme.key_text_RedRegular, resourcesProvider),
             )
             maxLines = 12
             setHorizontallyScrolling(false)
@@ -222,6 +225,22 @@ class FilterRulesActivity : BaseActivity() {
     }
 
     /** 显示新增/编辑规则对话框. editIndex=null 表示新增. */
+    /**
+     * Plain framework CompoundButtons take text/tint colors from the system theme, which does not
+     * follow the Telegram theme of the dialog background (e.g. dark text on a dark dialog under a
+     * light system / Monet palette). Apply the dialog theme colors explicitly.
+     */
+    private fun CompoundButton.applyDialogTheme(checkedKey: Int, uncheckedKey: Int) {
+        setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider))
+        buttonTintList = ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+            intArrayOf(
+                Theme.getColor(checkedKey, resourcesProvider),
+                Theme.getColor(uncheckedKey, resourcesProvider),
+            ),
+        )
+    }
+
     private fun showEditDialog(editIndex: Int?) {
         val context = parentActivity ?: return
         val editing = editIndex?.let { rules[it] }
@@ -253,6 +272,7 @@ class FilterRulesActivity : BaseActivity() {
                 id = type + 1000
                 text = label
                 isChecked = (editing?.matchType ?: MessageFilterRules.MATCH_CONTAINS) == type
+                applyDialogTheme(Theme.key_dialogRadioBackgroundChecked, Theme.key_dialogRadioBackground)
             })
         }
         container.addView(matchGroup)
@@ -262,13 +282,14 @@ class FilterRulesActivity : BaseActivity() {
             background = null
             setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16f)
             setTextColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider))
-            setCursorColor(Theme.getColor(Theme.key_dialogTextBlack))
+            setCursorColor(Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider))
+            setHintColor(Theme.getColor(Theme.key_dialogTextHint, resourcesProvider))
             setCursorSize(AndroidUtilities.dp(20f))
             setCursorWidth(1.5f)
             setLineColors(
-                Theme.getColor(Theme.key_windowBackgroundWhiteInputField),
-                Theme.getColor(Theme.key_windowBackgroundWhiteInputFieldActivated),
-                Theme.getColor(Theme.key_text_RedRegular),
+                Theme.getColor(Theme.key_windowBackgroundWhiteInputField, resourcesProvider),
+                Theme.getColor(Theme.key_windowBackgroundWhiteInputFieldActivated, resourcesProvider),
+                Theme.getColor(Theme.key_text_RedRegular, resourcesProvider),
             )
             setText(editing?.matchValue ?: "")
             setHintText(LocaleController.getString("FilterRulesMatchValueHint", R.string.FilterRulesMatchValueHint))
@@ -278,6 +299,7 @@ class FilterRulesActivity : BaseActivity() {
         val caseInsensitiveBox = CheckBox(context).apply {
             text = LocaleController.getString("FilterRulesCaseInsensitive", R.string.FilterRulesCaseInsensitive)
             isChecked = editing?.caseInsensitive ?: false
+            applyDialogTheme(Theme.key_dialogCheckboxSquareBackground, Theme.key_dialogCheckboxSquareUnchecked)
         }
         container.addView(caseInsensitiveBox)
 
@@ -293,6 +315,7 @@ class FilterRulesActivity : BaseActivity() {
                 id = act + 2000
                 text = label
                 isChecked = (editing?.action ?: MessageFilterRules.ACTION_HIDE) == act
+                applyDialogTheme(Theme.key_dialogRadioBackgroundChecked, Theme.key_dialogRadioBackground)
             })
         }
         container.addView(actionGroup)
