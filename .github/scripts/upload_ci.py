@@ -462,11 +462,17 @@ def prepare_apk_payload(apk_dir: str) -> Dict[str, Any]:
     return {"document": (os.path.basename(src), open(dst, "rb"))}
 
 
+def check_response(method: str, resp: requests.Response) -> None:
+    # The Bot API explains a rejection in the body; the URL carries the token.
+    if not resp.ok:
+        raise RuntimeError(f"{method} failed with HTTP {resp.status_code}: {resp.text[:2000]}")
+
+
 def post(method: str, data: Dict[str, Any], files: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     data = {**data, "parse_mode": "HTML"}
     print(f"-> {method} payload keys: {sorted(data.keys())}")
     resp = requests.post(url(method), data=data, files=files, timeout=600)
-    resp.raise_for_status()
+    check_response(method, resp)
     body = resp.json()
     if not body.get("ok", False):
         raise RuntimeError(f"{method} returned not-ok: {body}")
@@ -496,7 +502,7 @@ def send_tracking(channel: int, version_name: str, version_code: str, start_id: 
         data={"chat_id": channel, "text": text},
         timeout=60,
     )
-    resp.raise_for_status()
+    check_response("sendMessage", resp)
     print(f"tracking: {text}")
 
 
