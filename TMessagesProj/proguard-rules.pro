@@ -12,6 +12,7 @@
 -keep class org.webrtc.audio.* { *; }
 -keep class org.webrtc.voiceengine.* { *; }
 -keep class org.telegram.tgnet.RequestDelegateInternal { *; }
+-keep class org.telegram.messenger.UserConfig { *; }
 # org.telegram.messenger: only the names that native code and reflection resolve at runtime.
 # Before changing these rules see TMessagesProj/proguard-checklist.md and run Tools/r8_keep_check.py.
 # Static JNI exports Java_org_telegram_messenger_<Class>_<method> (Utilities, Intro, MediaController, MrzRecognizer).
