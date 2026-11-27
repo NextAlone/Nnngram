@@ -2012,6 +2012,37 @@ public class ChatActivityEnterView extends FrameLayout implements
         invalidate();
     }
 
+    // Nnngram: with "Confirm To Send Media Messages" a finished voice or video
+    // message stops in the paused preview instead of being sent; sending it
+    // from the preview goes through the usual path.
+    private boolean pauseRecordingForPreview() {
+        if (!Config.confirmToSendMediaMessages || !recordingAudioVideo) {
+            return false;
+        }
+        if (hasRecordVideo && isInVideoMode()) {
+            if (delegate.isVideoRecordingPaused()) {
+                return false;
+            }
+            if (slideText != null) {
+                slideText.setEnabled(false);
+            }
+            delegate.toggleVideoRecordingPause();
+        } else {
+            if (MediaController.getInstance().isRecordingPaused()) {
+                return false;
+            }
+            if (sendButtonVisible) {
+                calledRecordRunnable = true;
+            }
+            MediaController.getInstance().toggleRecordingPause(voiceOnce);
+            delegate.needStartRecordAudio(0);
+            if (slideText != null) {
+                slideText.setEnabled(false);
+            }
+        }
+        return true;
+    }
+
     public boolean seekbarVisible() {
         return !recordIsCanceled && transformToSeekbar > 0;
     }
@@ -3061,6 +3092,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                     if (recordCircle.isSendButtonVisible()) {
                         if (!hasRecordVideo || calledRecordRunnable) {
                             startedDraggingX = -1;
+                            if (pauseRecordingForPreview()) {
+                                return true;
+                            }
                             if (hasRecordVideo && isInVideoMode()) {
                                 if (AlertsCreator.needsPaidMessageAlert(currentAccount, dialog_id)) {
                                     if (slideText != null) {
@@ -3183,6 +3217,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                             sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED);
                         } else if (!hasRecordVideo || calledRecordRunnable) {
                             startedDraggingX = -1;
+                            if ((hasRecordVideo && isInVideoMode() || sendVoiceEnabled) && pauseRecordingForPreview()) {
+                                return true;
+                            }
                             if (hasRecordVideo && isInVideoMode()) {
                                 if (AlertsCreator.needsPaidMessageAlert(currentAccount, dialog_id)) {
                                     if (slideText != null) {
