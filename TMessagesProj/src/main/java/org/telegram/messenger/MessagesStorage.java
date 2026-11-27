@@ -3166,7 +3166,7 @@ public class MessagesStorage extends BaseController {
                             for (int i = 0; i < 2; i++) {
                                 LongSparseArray<TLRPC.User> dict = i == 0 ? usersDict : encUsersDict;
                                 TLRPC.User user = dict.get(did);
-                                if (user != null) {
+                                if (user != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(user.id) >= 0)) {
                                     int count;
                                     if (i == 0) {
                                         count = 1;
@@ -3195,7 +3195,7 @@ public class MessagesStorage extends BaseController {
                             }
                         } else {
                             TLRPC.Chat chat = chatsDict.get(-did);
-                            if (chat != null) {
+                            if (chat != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(-chat.id) >= 0 && dialogsWithMentions.indexOfKey(-chat.id) < 0)) {
                                 int flag;
                                 if (ChatObject.isChannel(chat) && !chat.megagroup) {
                                     flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
@@ -6580,7 +6580,7 @@ public class MessagesStorage extends BaseController {
                             for (int i = 0; i < 2; i++) {
                                 LongSparseArray<TLRPC.User> dict = i == 0 ? usersDict : encUsersDict;
                                 TLRPC.User user = dict.get(did);
-                                if (user != null) {
+                                if (user != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(user.id) >= 0)) {
                                     int count;
                                     if (i == 0) {
                                         count = 1;
@@ -6609,7 +6609,7 @@ public class MessagesStorage extends BaseController {
                             }
                         } else {
                             TLRPC.Chat chat = chatsDict.get(-did);
-                            if (chat != null) {
+                            if (chat != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(-chat.id) >= 0 && dialogsWithMentions.indexOfKey(-chat.id) < 0)) {
                                 int flag;
                                 if (ChatObject.isChannel(chat) && !chat.megagroup) {
                                     flag = MessagesController.DIALOG_FILTER_FLAG_CHANNELS;
@@ -6799,7 +6799,7 @@ public class MessagesStorage extends BaseController {
                             }
                             if (DialogObject.isUserDialog(did)) {
                                 TLRPC.User user = usersDict.get(did);
-                                if (user != null) {
+                                if (user != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(user.id) >= 0)) {
                                     if ((flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && mutedDialogs.indexOfKey(user.id) >= 0) {
                                         unreadCount++;
                                     } else {
@@ -6819,7 +6819,7 @@ public class MessagesStorage extends BaseController {
                                     }
                                 }
                                 user = encUsersDict.get(did);
-                                if (user != null) {
+                                if (user != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(user.id) >= 0)) {
                                     int count = encryptedChatsByUsersCount.get(did, 0);
                                     if ((flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && mutedDialogs.indexOfKey(user.id) >= 0) {
                                         unreadCount += count;
@@ -6841,7 +6841,7 @@ public class MessagesStorage extends BaseController {
                                 }
                             } else {
                                 TLRPC.Chat chat = chatsDict.get(-did);
-                                if (chat != null) {
+                                if (chat != null && !(Config.ignoreMutedCount && mutedDialogs.indexOfKey(-chat.id) >= 0 && dialogsWithMentions.indexOfKey(-chat.id) < 0)) {
                                     if ((flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0 && mutedDialogs.indexOfKey(-chat.id) >= 0) {
                                         unreadCount++;
                                     } else {
@@ -18104,7 +18104,7 @@ public class MessagesStorage extends BaseController {
         for (int a = 0, N = dialogFilters.size(); a < N; a++) {
             MessagesController.DialogFilter filter = dialogFilters.get(a);
             if (muted) {
-                if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0) {
+                if (Config.ignoreMutedCount || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_MUTED) != 0) {
                     filter.pendingUnreadCount = -1;
                 }
             } else {

@@ -40,6 +40,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LanguageDetector;
 import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
@@ -260,6 +261,13 @@ public class GeneralSettingActivity extends BaseActivity {
             Config.toggleIgnoreMutedCount();
             if (view instanceof TextCheckCell) {
                 ((TextCheckCell) view).setChecked(Config.ignoreMutedCount);
+            }
+            // The forced EXCLUDE_MUTED is not in filter.flags, so every filter must be recounted.
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (UserConfig.getInstance(a).isClientActivated()) {
+                    MessagesStorage storage = MessagesStorage.getInstance(a);
+                    storage.getStorageQueue().postRunnable(() -> storage.resetAllUnreadCounters(false));
+                }
             }
         } else if (position == disableSharePhoneWithContactByDefaultRow) {
             Config.toggleDisableSharePhoneWithContactByDefault();
