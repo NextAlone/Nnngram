@@ -3895,7 +3895,7 @@ public class ArticleViewer extends IArticleViewer implements NotificationCenter.
     @Override
     public void openWebpageUrl(String url, String anchor, Browser.Progress progress) {
         if (parentActivity == null || parentActivity.isFinishing()) return;
-        if (pages[0] != null && pages[0].isLocal()) {
+        if (pages[0] != null && pages[0].isLocal() && !Config.skipOpenLinkConfirm) {
             String format = LocaleController.getString(R.string.OpenUrlAlert2);
             int index = format.indexOf("%");
             SpannableStringBuilder stringBuilder = new SpannableStringBuilder(String.format(format, url));
